@@ -74,7 +74,7 @@ public final class MailSaver extends Observable {
 		model.setEmailStr(mailContent);
 
 		synchronized (getLock()) {
-			String filePath = saveEmailToFile(mailContent);
+			String filePath = saveEmailToFile(model);
 
 			model.setReceivedDate(new Date());
 			model.setFilePath(filePath);
@@ -151,15 +151,17 @@ public final class MailSaver extends Observable {
 	/**
 	 * Saves the content of the email passed in parameters in a file.
 	 *
-	 * @param mailContent the content of the email to be saved.
+	 * @param mailModel Email model
 	 * @return the path of the created file.
 	 */
-	private String saveEmailToFile(String mailContent) {
+	private String saveEmailToFile(EmailModel mailModel) {
 		if (ArgsHandler.INSTANCE.memoryModeEnabled()) {
 			return null;
 		}
-		String filePath = String.format("%s%s%s", UIModel.INSTANCE.getSavePath(), File.separator,
-				dateFormat.format(new Date()));
+
+		final String fileBaseName = buildFileBaseName(mailModel);
+
+		String filePath = String.format("%s%s%s", UIModel.INSTANCE.getSavePath(), File.separator, fileBaseName);
 
 		// Create file
 		int i = 0;
@@ -176,7 +178,7 @@ public final class MailSaver extends Observable {
 
 		// Copy String to file
 		try {
-			FileUtils.writeStringToFile(file, mailContent);
+			FileUtils.writeStringToFile(file, mailModel.getEmailStr());
 		} catch (IOException e) {
 			// If we can't save file, we display the error in the SMTP logs
 			Logger smtpLogger = LoggerFactory.getLogger(org.subethamail.smtp.server.Session.class);
@@ -184,6 +186,18 @@ public final class MailSaver extends Observable {
 		}
 		return file.getAbsolutePath();
 	}
+
+	// Visible for testing
+	public String buildFileBaseName(EmailModel emailModel) {
+    final String from = normalizeEmail(emailModel.getFrom());
+    final String to = normalizeEmail(emailModel.getTo());
+
+    return String.format("%s--%s--%s", from, to, dateFormat.format(new Date()));
+  }
+
+	private String normalizeEmail(String email) {
+	  return email == null ? null : email.replaceAll("[.@]", "_");
+  }
 
 	/**
 	 * Gets the subject from the email data passed in parameters.

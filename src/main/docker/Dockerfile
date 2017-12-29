@@ -1,11 +1,8 @@
 FROM java:8
 
-RUN mkdir -p /output
-
-ADD fakeSMTP-2.1-SNAPSHOT.jar /fakeSMTP.jar
-
-VOLUME /output
+ADD fakeSMTP-2.1.jar /opt
 
 EXPOSE 25
+VOLUME ["/var/mail"]
 
-ENTRYPOINT ["java","-jar","/fakeSMTP.jar","--background", "--output-dir", "/output", "--port", "25", "--start-server"]
+CMD java -jar /opt/fakeSMTP-2.1.jar -s -b -o /var/mail

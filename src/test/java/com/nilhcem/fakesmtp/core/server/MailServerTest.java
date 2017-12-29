@@ -66,6 +66,15 @@ public class MailServerTest {
 		saver.deleteObserver(mockObserver);
 	}
 
+	@Test
+  public void buildProperFileName() {
+	  EmailModel model = new EmailModel();
+	  model.setFrom("ivan.grozny@test.com");
+	  model.setTo("no-reply@test.com");
+
+	  assertTrue(saver.buildFileBaseName(model).startsWith("ivan_grozny_test_com--no-reply_test_com"));
+  }
+
 	private String getMockEmail(String from, String to, String subject, String content) {
 		String br = System.getProperty("line.separator");
 
